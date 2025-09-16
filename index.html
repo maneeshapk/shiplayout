@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoJS Diagram — Converted from JSON</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #diagramDiv { width: 100%; height: 100vh; background: #f3f3f3; }
+    .panel-header { font-family: Arial, sans-serif; font-size: 12px; }
+  </style>
+  <!-- GoJS CDN -->
+  <script src="https://unpkg.com/gojs/release/go.js"></script>
+</head>
+<body>
+  <div id="diagramDiv"></div>
+
+  <script>
+    (function() {
+      const $ = go.GraphObject.make;
+
+      const diagram = $(go.Diagram, 'diagramDiv', {
+        initialAutoScale: go.Diagram.Uniform,
+        'undoManager.isEnabled': true
+      });
+
+      // Node template: renders a Geometry path when eq_geometry is present,
+      // otherwise falls back to a simple rectangle.
+      diagram.nodeTemplateMap.add('',
+        $(go.Node, 'Auto',
+          new go.Binding('position', 'loc', function(loc) {
+            if (!loc) return new go.Point(0,0);
+            const parts = String(loc).split(/\s+/).map(parseFloat);
+            return new go.Point(parts[0] || 0, parts[1] || 0);
+          }).makeTwoWay(function(pt){ return pt.x + ' ' + pt.y; }),
+          new go.Binding('angle', 'angle', function(a){
+            // some items have angle as string 'undefined' or numeric
+            const v = parseFloat(a);
+            return isNaN(v) ? 0 : v;
+          }),
+          // set size if provided
+          new go.Binding('desiredSize', 'size', function(s){
+            if (!s) return new go.Size(NaN, NaN);
+            const p = String(s).split(/\s+/).map(parseFloat);
+            return new go.Size(p[0] || NaN, p[1] || NaN);
+          }),
+
+          // Panel that either draws Geometry path or a rectangle
+          $(go.Panel, 'Spot',
+            $(go.Shape,
+              {
+                strokeWidth: 1,
+                stretch: go.GraphObject.Uniform, // let geometry determine
+                portId: ''
+              },
+              // bind fill and stroke from data
+              new go.Binding('fill', 'color').ofObject(),
+              new go.Binding('stroke', 'stroke').ofObject(),
+              // geometry binding: parse path string if present
+              new go.Binding('geometry', 'eq_geometry', function(g) {
+                try {
+                  if (!g) return null;
+                  // g is expected to be an object like { class: 'go.Geometry', type: 'Path', path: 'F M0 0 L...'}
+                  if (g.path) return go.Geometry.parse(g.path);
+                } catch (e) {
+                  console.warn('geometry parse failed', e);
+                }
+                return null;
+              })
+            ),
+
+            // label (optional) - shows key/name for debugging
+            $(go.TextBlock, { margin: 4, editable: false, visible: true },
+              new go.Binding('text', 'name', function(n, d){ return n || d.key || ''; })
+            )
+          )
+        )
+      );
+
+      // Additional template for category 'layout' (make it non-selectable maybe)
+      diagram.nodeTemplateMap.add('layout',
+        $(go.Node, 'Auto',
+          { selectable: false },
+          new go.Binding('position', 'loc', function(loc) {
+            if (!loc) return new go.Point(0,0);
+            const parts = String(loc).split(/\s+/).map(parseFloat);
+            return new go.Point(parts[0] || 0, parts[1] || 0);
+          }).makeTwoWay(function(pt){ return pt.x + ' ' + pt.y; }),
+
+          $(go.Shape,
+            {
+              strokeWidth: 1,
+              isPanelMain: true
+            },
+            new go.Binding('geometry', 'geo', function(g){
+              try { if (g && g.path) return go.Geometry.parse(g.path); } catch (e) { console.warn(e); }
+              return null;
+            }),
+            new go.Binding('fill', 'color'),
+            new go.Binding('stroke', 'stroke')
+          )
+        )
+      );
+
+      // A simple link template (in case there are any links)
+      diagram.linkTemplate =
+        $(go.Link,
+          { routing: go.Link.AvoidsNodes, curve: go.Link.JumpOver },
+          $(go.Shape),
+          $(go.Shape, { toArrow: 'Standard' })
+        );
+
+      // The JSON you provided (embedded). If you want to load a different JSON,
+      // replace the object below or fetch it dynamically.
+      const data = {
+"drawing_id": 98788,
+"InspectionCategory": "MADEIN",
+"isSubEquipmentdrawing": "No",
+"EquipmentDrawingData": {
+  "position": "-250 -120",
+  "model": {
+    "class": "GraphLinksModel",
+    "nodeDataArray": [
+      { "key": "9365972_Base_2", "name": "Base Layout", "category": "layout", "location": "234 77", "geo": { "class": "go.Geometry", "type": "Path", "path": "F M0 97.90999999999994 L0 68.44999999999996 M0 68.44999999999996 L0 28.129999999999967 M0 28.129999999999967 L3.87 13.399999999999977 M3.87 13.399999999999977 L12.92 3.9799999999999898 M12.92 3.9799999999999898 L23.18 0 M23.18 0 L34.77 0 M34.77 0 L603.4 0 M603.4 0 L622.72 0 M622.72 0 L636.96 0 M636.96 0 L648.5500000000001 1.3300000000000125 M648.5500000000001 1.3300000000000125 L657.61 2.660000000000025 M657.61 2.660000000000025 L666.54 3.980000000000018 M666.54 3.980000000000018 L674.27 5.310000000000031 M674.27 5.310000000000031 L684.65 8.090000000000032 M684.65 8.090000000000032 L694.91 10.740000000000038 M694.91 10.740000000000038 L710.36 14.730000000000047 M710.36 14.730000000000047 L722.07 18.710000000000036 M722.07 18.710000000000036 L733.6600000000001 24.150000000000034 M733.6600000000001 24.150000000000034 L746.46 29.460000000000036 M746.46 29.460000000000036 L759.38 38.87000000000003 M759.38 38.87000000000003 L770.97 48.29000000000002 M770.97 48.29000000000002 L778.7 56.380000000000024 M778.7 56.380000000000024 L783.8900000000001 64.35000000000005 M783.8900000000001 64.35000000000005 L789.0800000000002 73.76000000000008 M789.0800000000002 73.76000000000008 L794.2700000000002 85.84000000000006 M794.2700000000002 85.84000000000006 L795.4800000000002 97.91000000000005 M795.4800000000002 97.91000000000005 L794.2700000000002 109.98000000000005 M794.2700000000002 109.98000000000005 L789.0800000000002 122.06000000000003 M789.0800000000002 122.06000000000003 L783.8900000000001 131.47000000000006 M783.8900000000001 131.47000000000006 L778.7 139.44000000000008 M778.7 139.44000000000008 L770.97 147.53000000000006 M770.97 147.53000000000006 L759.38 156.95000000000007 M759.38 156.95000000000007 L746.46 166.3600000000001 M746.46 166.3600000000001 L733.6600000000001 171.6700000000001 M733.6600000000001 171.6700000000001 L722.07 177.1100000000001 M722.07 177.1100000000001 L710.36 181.09000000000012 M710.36 181.09000000000012 L694.91 185.08000000000013 M694.91 185.08000000000013 L684.65 187.7300000000001 M684.65 187.7300000000001 L674.27 190.51000000000008 M674.27 190.51000000000008 L666.54 191.84000000000006 M666.54 191.84000000000006 L657.61 193.16000000000005 M657.61 193.16000000000005 L648.5500000000001 194.49000000000004 M648.5500000000001 194.49000000000004 L636.96 195.82000000000002 M636.96 195.82000000000002 L622.72 195.82000000000002 M622.72 195.82000000000002 L603.4 195.82000000000002 M603.4 195.82000000000002 L34.77 195.82000000000002 M34.77 195.82000000000002 L23.18 195.82000000000002 M23.18 195.82000000000002 L12.920000000000002 191.84 M12.920000000000002 191.84 L3.870000000000001 182.42 M3.870000000000001 182.42 L8.881784197001252e-16 167.68999999999997 M8.881784197001252e-16 167.68999999999997 L8.881784197001252e-16 127.36999999999998 M8.881784197001252e-16 127.36999999999998 L8.881784197001252e-16 97.90999999999994" }, "RefParams": "" },
+      { "key": "9365972_Bay_3", "equipmentId": "876543", "EquipmentCode": "707.2", "Selectable": "false", "JobPlans": "", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L179 0 L179 50 L91.39626250000083 29.74557500000003 L0 50 L0 0" }, "loc": "881.3537375000003 78.9544250000001", "size": "220 20", "IsAnimation": "" },
+      { "key": "9365972_BAY_4", "equipmentId": "876542", "EquipmentCode": "707.2", "Selectable": "false", "JobPlans": "", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L179 0 L179 50 L91.39626250000083 29.74557500000003 L0 50 L0 0" }, "loc": "881.3537375000003 354.9544250000001", "size": "220 20", "IsAnimation": "" },
+      { "key": "9365972_BAY_5", "equipmentId": "876541", "EquipmentCode": "707.2", "Selectable": "false", "JobPlans": "", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L179 0 L179 50 L91.39626250000083 29.74557500000003 L0 50 L0 0" }, "loc": "1010.3537375000003 97.95442500000013", "angle": 90, "size": "260 20", "IsAnimation": "" },
+      { "key": "9365972_BAY_1", "equipmentId": "876540", "EquipmentCode": "707.2", "Selectable": "false", "JobPlans": "", "name": "", "color": "#ffffff", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "1010.7106036997263 98.27029124049247", "angle": "undefined", "size": "90 260", "IsAnimation": "" },
+      { "key": "9365972_BAY_2", "equipmentId": "876539", "EquipmentCode": "707.2", "Selectable": "false", "JobPlans": "", "name": "", "color": "#ffffff", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "900.7106036997263 98.27029124049247", "angle": "undefined", "size": "90 260", "IsAnimation": "" },
+      { "key": "9365972_HC_1", "equipmentId": "876538", "EquipmentCode": "707.2", "JobPlans":"[{\"jobplanid\":\"32100\",\"child_drawing\":\"98789\",\"formcode\":\"\"},{\"jobplanid\":\"76676\",\"child_drawing\":\"\",\"formcode\":\"CLEAN\"}]", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "1009.6468185484775 98.55005204055132", "size": "90 60", "IsAnimation": "" },
+      { "key": "9365972_HC_2", "equipmentId": "876537", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "1009.6468185484775 158.79566677123208", "size": "90 70", "IsAnimation": "" },
+      { "key": "9365972_HC_3", "equipmentId": "876536", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "1009.7326265772829 227.29899431752844", "size": "90 70", "IsAnimation": "" },
+      { "key": "9365972_HC_4", "equipmentId": "876535", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "1009.8186354611837 297.08452934006937", "size": "90 60", "IsAnimation": "" },
+      { "key": "9365972_HC_8", "equipmentId": "876534", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "900.8186354611837 297.08452934006937", "size": "90 60", "IsAnimation": "" },
+      { "key": "9365972_HC_7", "equipmentId": "876541", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "900.7326265772829 227.29899431752844", "size": "90 70", "IsAnimation": "" },
+      { "key": "9365972_HC_6", "equipmentId": "876541", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "900.6468185484775 158.79566677123208", "size": "90 70", "IsAnimation": "" },
+      { "key": "9365972_HC_5", "equipmentId": "876541", "EquipmentCode": "707.2", "JobPlans":"", "Selectable": "true", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L80 0 L80 80 L0 80 L0 0" }, "loc": "900.6468185484775 98.55005204055132", "size": "90 60", "IsAnimation": "" },
+      { "key": "9365972_BAY_6", "equipmentId": "876541", "EquipmentCode": "707.2", "JobPlans": "", "Selectable": "false", "name": "", "color": "#008000", "stroke": "#000000", "category": "svd", "eq_geometry": { "class": "go.Geometry", "type": "Path", "path": "F M0 0 L179 0 L179 50 L91.39626250000083 29.74557500000003 L0 50 L0 0" }, "loc": "900.3537375000003 97.95442500000013", "angle": 90, "size": "260 20", "IsAnimation": "" }
+    ],
+    "linkDataArray": []
+  }
+}
+};
+
+      // load the model into the diagram
+      try {
+        const modelJson = data.EquipmentDrawingData && data.EquipmentDrawingData.model ? data.EquipmentDrawingData.model : null;
+        if (modelJson) {
+          diagram.model = go.Model.fromJson(JSON.stringify(modelJson));
+        } else {
+          console.error('No model found in the provided data object.');
+        }
+      } catch (e) {
+        console.error('Failed to load model:', e);
+      }
+
+      // center / fit
+      diagram.addDiagramListener('InitialLayoutCompleted', function(e){
+        diagram.zoomToFit();
+      });
+
+    })();
+  </script>
+</body>
+</html>
